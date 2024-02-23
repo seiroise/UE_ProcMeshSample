@@ -4,20 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "ProcMeshActor_01.generated.h"
+#include "ProcMeshActor_02.generated.h"
 
 class UProceduralMeshComponent;
 
 /**
- * サンプル01。三角形の作成
+ * サンプル02。立方体の作成
  */
 UCLASS()
-class PROCMESHSAMPLE_API AProcMeshActor_01 : public AActor
+class PROCMESHSAMPLE_API AProcMeshActor_02 : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AProcMeshActor_01();
+	AProcMeshActor_02();
 
 protected:
 	virtual void BeginPlay() override;
@@ -27,7 +27,7 @@ public:
 
 private:
 
-	void GenerateTriangle();
+	void GenerateCube();
 	
 private:
 
