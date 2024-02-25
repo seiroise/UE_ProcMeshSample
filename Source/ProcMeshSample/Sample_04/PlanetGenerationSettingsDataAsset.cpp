@@ -3,6 +3,7 @@
 
 #include "PlanetGenerationSettingsDataAsset.h"
 
+#include "Modifier/NoiseModifierBase.h"
 #include "Noise/NoiseFilterBase.h"
 
 float UPlanetGenerationSettingsDataAsset::EvaluateNoiseOnUnitSphere(const FVector& InNormal) const
@@ -53,7 +54,18 @@ FPlanetElevationInfo UPlanetGenerationSettingsDataAsset::CalculatePlanetElevatio
 {
 	FPlanetElevationInfo ElevationInfo;
 	float NoiseValue = EvaluateNoiseOnUnitSphere(InNormal);
+
+	// ノイズ編集
+	for(const FPlanetNoiseModifier& Modifier : m_NoiseModifierArray)
+	{
+		if(Modifier.m_bIsEnabled && IsValid(Modifier.m_pNoiseModifier))
+		{
+			NoiseValue = Modifier.m_pNoiseModifier->ModifyNoise(NoiseValue);
+		}
+	}
+	
 	float ClampedNoiseValue = FMath::Max(NoiseValue, 0.f);
+	
 	// ノイズ情報
 	ElevationInfo.m_NoiseValue = NoiseValue;
 	// 標高

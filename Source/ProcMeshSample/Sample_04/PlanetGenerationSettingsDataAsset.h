@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "PlanetGenerationSettingsDataAsset.generated.h"
 
+class UNoiseModifierBase;
 class UNoiseFilterBase;
 
 /**
@@ -35,6 +36,30 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, Instanced)
 	TObjectPtr<UNoiseFilterBase> m_pNoiseFilter;
+};
+
+/**
+ * ノイズModifier
+ */
+USTRUCT()
+struct FPlanetNoiseModifier
+{
+	GENERATED_BODY()
+
+public:
+
+	/**
+	 * 有効か
+	 */
+	UPROPERTY(EditAnywhere)
+	bool m_bIsEnabled = true;
+
+	/**
+	 * ノイズ編集クラス
+	 */
+	UPROPERTY(EditAnywhere, Instanced)
+	TObjectPtr<UNoiseModifierBase> m_pNoiseModifier;
+	
 };
 
 /**
@@ -99,10 +124,16 @@ private:
 	float m_PlanetRadius = 500.f;
 	
 	/**
-	 * 各種ノイズ設定
+	 * ノイズレイヤー
 	 */
 	UPROPERTY(EditAnywhere)
 	TArray<FPlanetNoiseLayer> m_NoiseLayerArray;
+
+	/**
+	 * ノイズ編集
+	 */
+	UPROPERTY(EditAnywhere)
+	TArray<FPlanetNoiseModifier> m_NoiseModifierArray;
 
 #if WITH_EDITOR
 
