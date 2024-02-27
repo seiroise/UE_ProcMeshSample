@@ -6,6 +6,7 @@
 #include "Engine/DataAsset.h"
 #include "PlanetGenerationSettingsDataAsset.generated.h"
 
+class UPlanetBiomeSettings;
 class UNoiseModifierBase;
 class UNoiseFilterBase;
 
@@ -59,6 +60,23 @@ public:
 	 */
 	UPROPERTY(EditAnywhere, Instanced)
 	TObjectPtr<UNoiseModifierBase> m_pNoiseModifier;
+};
+
+/**
+ * バイオーム設定
+ */
+USTRUCT()
+struct FPlanetBiomeEntry
+{
+	GENERATED_BODY()
+
+public:
+
+	/**
+	 * バイオーム設定
+	 */
+	UPROPERTY(EditAnywhere, Instanced)
+	TObjectPtr<UPlanetBiomeSettings> m_pBiomeSettings;
 	
 };
 
@@ -111,6 +129,27 @@ public:
 	FPlanetElevationInfo CalculatePlanetElevation(const FVector& InNormal) const;
 
 	/**
+	 * バイオームのインデックスを求める。小数点以下は補間率
+	 * @param InNormal 
+	 * @return 
+	 */
+	float CalculateBiomeIndex(const FVector& InNormal) const;
+
+	/**
+	 * バイオーム毎のテクスチャ上のV座標を求める
+	 * @param InNormal 
+	 * @return 
+	 */
+	float CalculateBiomeTextureCoordinate(const FVector& InNormal) const;
+	
+	/**
+	 * 惑星表面の色を求める
+	 * @param InNormal 
+	 * @return 
+	 */
+	FLinearColor CalculatePlanetColor(const FVector& InNormal, float InElevationRatio) const;
+	
+	/**
 	 * ノイズレイヤーの配列を返す
 	 */
 	TArray<FPlanetNoiseLayer>& GetNoiseLayerArray() { return m_NoiseLayerArray; }
@@ -134,6 +173,20 @@ private:
 	 */
 	UPROPERTY(EditAnywhere)
 	TArray<FPlanetNoiseModifier> m_NoiseModifierArray;
+
+	/**
+	 * バイオーム毎のブレンド範囲
+	 */
+	UPROPERTY(EditAnywhere, Category="Biome")
+	float m_BiomeBlendRange = 0.2f;
+	
+	/**
+	 * バイオーム設定
+	 */
+	UPROPERTY(EditAnywhere, Category="Biome")
+	TArray<FPlanetBiomeEntry> m_BiomeArray;
+
+	
 
 #if WITH_EDITOR
 

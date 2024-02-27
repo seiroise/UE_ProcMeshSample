@@ -61,4 +61,10 @@ public:
 	 */
 	bool m_bUseColors;
 	TArray<FLinearColor> m_Colors;
+
+	/**
+	 * UV
+	 */
+	bool m_bUseUV1;
+	TArray<FVector2D> m_UV1s;
 };

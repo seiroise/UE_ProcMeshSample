@@ -29,7 +29,7 @@ void FMeshDataProxy::CreateMeshSection(UProceduralMeshComponent* InMeshComponent
 		m_Vertices,
 		m_Triangles,
 		m_bUseNormals ? m_Normals : TArray<FVector>(),
-		TArray<FVector2D>(),
+		m_bUseUV1 ? m_UV1s : TArray<FVector2D>(),
 		m_bUseColors ? m_Colors : TArray<FLinearColor>(),
 		TArray<FProcMeshTangent>(),
 		InCreateCollision

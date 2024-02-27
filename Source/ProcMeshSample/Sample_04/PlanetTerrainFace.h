@@ -32,7 +32,7 @@ public:
 	/**
 	 * 初期化処理
 	 */
-	void Initialize(int32 InResolution, const FVector& InLocalUp, UPlanetGenerationSettingsDataAsset* InGenSettings);
+	void Initialize(int32 InResolution, const FVector& InLocalUp, UPlanetGenerationSettingsDataAsset* InGenSettings, const FFloatRange& InXRange, const FFloatRange& InYRange);
 
 	/**
 	 * 頂点情報の生成
@@ -73,6 +73,9 @@ private:
 	FVector m_AxisA;
 	FVector m_AxisB;
 
+	FFloatRange m_XRange;
+	FFloatRange m_YRange;
+
 	float m_MinElevation;
 	float m_MaxElevation;
 
@@ -80,7 +83,9 @@ private:
 	TObjectPtr<UPlanetGenerationSettingsDataAsset> m_pGenSettings;
 
 	TArray<FPlanetElevationInfo> m_Elevations;
+	TArray<FVector> m_UnitNormals;
 	TArray<FVector> m_Vertices;
 	TArray<FVector> m_Normals;
 	TArray<FLinearColor> m_Colors;
+	TArray<FVector2D> m_UV1s;
 };

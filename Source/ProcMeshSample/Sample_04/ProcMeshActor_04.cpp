@@ -7,7 +7,6 @@
 #include "ProceduralMeshComponent.h"
 #include "ProcMeshSample/Common/ScopedTimer.h"
 
-
 AProcMeshActor_04::AProcMeshActor_04()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -28,23 +27,6 @@ void AProcMeshActor_04::BeginPlay()
 void AProcMeshActor_04::TickActor(float DeltaTime, ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
-
-	// アニメーション
-	// if(m_bAnimation)
-	// {
-	// 	if(IsValid(m_pGenSettings))
-	// 	{
-	// 		TArray<FPlanetNoiseLayer>& NoiseLayerArray = m_pGenSettings->GetNoiseLayerArray();
-	// 		if(!NoiseLayerArray.IsEmpty())
-	// 		{
-	// 			FVector NoiseCentre = NoiseLayerArray[0].m_NoiseSettings.m_NoiseCentre;
-	// 			NoiseCentre.Y += DeltaTime * m_AnimationSpeed;
-	// 			NoiseLayerArray[0].m_NoiseSettings.m_NoiseCentre = NoiseCentre;
-	// 			// 生成
-	// 			GenerateSphereMesh_NormalizedCube();
-	// 		}
-	// 	}
-	// }
 
 	if (TickType == LEVELTICK_ViewportsOnly)
 	{
@@ -106,21 +88,39 @@ void AProcMeshActor_04::GenerateSphereMesh_NormalizedCube()
 		return;
 	}
 
+	FScopedTimer Scope(TEXT("Generate Planet:"));
+
 	TArray<FVector> FaceVectors;
 
 	// 指定の面のみ更新
-	if (m_UpdateType == ETerrainUpdateType::All)
+	switch (m_RenderMask)
 	{
+	case EFaceRenderMask::All:
 		FaceVectors.Emplace(FVector::ForwardVector);
 		FaceVectors.Emplace(-FVector::ForwardVector);
 		FaceVectors.Emplace(FVector::RightVector);
 		FaceVectors.Emplace(-FVector::RightVector);
 		FaceVectors.Emplace(FVector::UpVector);
 		FaceVectors.Emplace(-FVector::UpVector);
-	}
-	else if (m_UpdateType == ETerrainUpdateType::Up)
-	{
+		break;
+	case EFaceRenderMask::Forward:
+		FaceVectors.Emplace(FVector::ForwardVector);
+		break;
+	case EFaceRenderMask::Backward:
+		FaceVectors.Emplace(FVector::BackwardVector);
+		break;
+	case EFaceRenderMask::Left:
+		FaceVectors.Emplace(FVector::LeftVector);
+		break;
+	case EFaceRenderMask::Right:
+		FaceVectors.Emplace(FVector::RightVector);
+		break;
+	case EFaceRenderMask::Top:
 		FaceVectors.Emplace(FVector::UpVector);
+		break;
+	case EFaceRenderMask::Bottom:
+		FaceVectors.Emplace(FVector::DownVector);
+		break;
 	}
 
 	// メッシュ情報を削除
@@ -137,12 +137,12 @@ void AProcMeshActor_04::GenerateSphereMesh_NormalizedCube()
 		UPlanetTerrainFace* TerrainFace = NewObject<UPlanetTerrainFace>();
 		TerrainFaceArray.Emplace(TerrainFace);
 		
-		TerrainFace->Initialize(m_Resolution, LocalUpVector, m_pGenSettings);
+		TerrainFace->Initialize(m_Resolution, LocalUpVector, m_pGenSettings, FFloatRange(0.f, 1.f), FFloatRange(0.f, 1.f));
 
 		// 頂点データを生成
 		FGenerateVertexDataResult Result;
 		{
-			FScopedTimer Scope(FString::Printf(TEXT("Face [%i] generating "), I));
+			FScopedTimer Scope_A(FString::Printf(TEXT("Face [%i] generate vertices:"), I));
 			Result = TerrainFace->GenerateVertexData();
 		}
 
@@ -158,7 +158,10 @@ void AProcMeshActor_04::GenerateSphereMesh_NormalizedCube()
 		TerrainFace->SetMinMaxElevation(MinElevation, MaxElevation);
 		
 		// 色情報を生成
-		TerrainFace->GenerateVertexColor();
+		{
+			FScopedTimer Scope_B(FString::Printf(TEXT("Face [%i] generate colors:"), I));
+			TerrainFace->GenerateVertexColor();	
+		}
 	}
 
 	// 各種設定
@@ -170,10 +173,11 @@ void AProcMeshActor_04::GenerateSphereMesh_NormalizedCube()
 		MeshData = TerrainFace->ConstructMeshData();
 		MeshData.m_bUseNormals = m_bUseNormals;
 		MeshData.m_bUseColors = m_bUseColors;
+		MeshData.m_bUseUV1 = m_bUseColors;
 
 		// メッシュセクション生成
 		{
-			FScopedTimer Scope(FString::Printf(TEXT("Face [%i] mesh creating"), I));
+			FScopedTimer Scope_C(FString::Printf(TEXT("Face [%i] mesh creating"), I));
 			MeshData.CreateMeshSection(m_pProcMeshComponent, I, m_bCreateCollision);	
 		}
 		

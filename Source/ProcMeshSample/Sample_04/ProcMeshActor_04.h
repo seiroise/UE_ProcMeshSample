@@ -10,14 +10,18 @@ class UProceduralMeshComponent;
 class UPlanetGenerationSettingsDataAsset;
 
 UENUM()
-enum class ETerrainUpdateType
+enum class EFaceRenderMask
 {
 	/** 全ての面を更新 */
 	All,
 	/** 上方向の一面だけを更新　*/
-	Up,
+	Forward,
+	Backward,
+	Left,
+	Right,
+	Top,
+	Bottom,
 };
-
 
 /**
  * サンプル04。地形の生成
@@ -51,16 +55,13 @@ private:
 	TObjectPtr<UProceduralMeshComponent> m_pProcMeshComponent;
 
 	UPROPERTY(EditAnywhere)
-	ETerrainUpdateType m_UpdateType = ETerrainUpdateType::All;
+	EFaceRenderMask m_RenderMask = EFaceRenderMask::All;
 	
-	UPROPERTY(EditAnywhere, meta=(UIMin = 2, UIMax=200))
+	UPROPERTY(EditAnywhere, meta=(UIMin = 2, UIMax=512))
 	int32 m_Resolution = 3;
 	
 	UPROPERTY(EditAnywhere)
 	bool m_bCreateCollision = false;
-
-	UPROPERTY(EditAnywhere)
-	bool m_bInParallel;
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UPlanetGenerationSettingsDataAsset> m_pGenSettings;
@@ -72,19 +73,10 @@ private:
 	bool m_bUseColors;
 	
 	UPROPERTY(EditAnywhere)
-	TObjectPtr<UMaterial> m_pMaterial;
-	
-	UPROPERTY()
-	TObjectPtr<UMaterialInstanceDynamic> m_pMaterialInstanceDynamic;
+	TObjectPtr<UMaterialInterface> m_pMaterial;
 
 	UPROPERTY(EditAnywhere)
 	bool m_bDrawNormals;
-
-	UPROPERTY(EditAnywhere)
-	bool m_bAnimation;
-
-	UPROPERTY(EditAnywhere)
-	float m_AnimationSpeed = 1.f;
 
 #if WITH_EDITOR
 	// =========================================================================================================

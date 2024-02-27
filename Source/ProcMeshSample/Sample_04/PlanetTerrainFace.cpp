@@ -5,11 +5,14 @@
 #include "PlanetGenerationSettingsDataAsset.h"
 
 void UPlanetTerrainFace::Initialize(int32 InResolution, const FVector& InLocalUp,
-                                    UPlanetGenerationSettingsDataAsset* InGenSettings)
+                                    UPlanetGenerationSettingsDataAsset* InGenSettings,
+                                    const FFloatRange& InXRange, const FFloatRange& InYRange)
 {
 	m_Resolution = InResolution;
 	m_LocalUp = InLocalUp.GetSafeNormal();
 	m_pGenSettings = InGenSettings;
+	m_XRange = InXRange;
+	m_YRange = InYRange;
 
 	// InLocalUpをもとに直交基底を作成
 	// 直交基底の場合は要素の入れ替えで可能
@@ -20,12 +23,20 @@ void UPlanetTerrainFace::Initialize(int32 InResolution, const FVector& InLocalUp
 FGenerateVertexDataResult UPlanetTerrainFace::GenerateVertexData()
 {
 	// 平面をm_Resolutionで分割
-	float EdgeLength = 100.f;
-	float HalfLength = EdgeLength * 0.5f;
-	float SectionLength = EdgeLength / (m_Resolution - 1);
+	constexpr float EdgeLength = 100.f;
+	constexpr float HalfEdgeLength = EdgeLength * 0.5f;
+
+	float XMin = m_XRange.GetLowerBoundValue() * EdgeLength - HalfEdgeLength;
+	float XSectionLength = m_XRange.Size<float>() * EdgeLength / (m_Resolution - 1);
+	float YMin = m_YRange.GetLowerBoundValue() * EdgeLength - HalfEdgeLength;
+	float YSectionLength = m_YRange.Size<float>() * EdgeLength / (m_Resolution - 1);
+
+	// float HalfLength = EdgeLength * 0.5f;
+	// float SectionLength = EdgeLength / (m_Resolution - 1);
 
 	int32 VertexNum = m_Resolution * m_Resolution;
 	m_Elevations.SetNum(VertexNum);
+	m_UnitNormals.SetNum(VertexNum);
 	m_Vertices.SetNum(VertexNum);
 	m_Normals.SetNum(VertexNum);
 
@@ -38,27 +49,28 @@ FGenerateVertexDataResult UPlanetTerrainFace::GenerateVertexData()
 		VertexNum,
 		[&](int32 InIdx)
 		{
-			int32 A = InIdx % m_Resolution;
-			int32 B = InIdx / m_Resolution;
+			int32 X = InIdx % m_Resolution;
+			int32 Y = InIdx / m_Resolution;
 
 			FVector Point =
-				(A * SectionLength - HalfLength) * m_AxisA +
-				(B * SectionLength - HalfLength) * m_AxisB +
-				HalfLength * m_LocalUp;
+				(X * XSectionLength + XMin) * m_AxisA +
+				(Y * YSectionLength + YMin) * m_AxisB +
+				HalfEdgeLength * m_LocalUp;
 
 			// 正規化
 			FVector UnitNormal = Point.GetSafeNormal();
+			m_UnitNormals[InIdx] = UnitNormal;
 			// 高さを取得
 			FPlanetElevationInfo ElevationInfo = CalculatePlanetElevation(UnitNormal);
 			// 高さ情報を保持
 			m_Elevations[InIdx] = ElevationInfo;
-			
+
 			// 頂点位置を計算
 			float OceanElevation = ElevationInfo.m_OceanElevation;
 			// Elevation <= 0の場所は海。なのでクランプする
 			FVector Vertex = UnitNormal * OceanElevation;
 			m_Vertices[InIdx] = Vertex;
-			
+
 			// 法線の計算
 			m_Normals[InIdx] = CalculatePlanetNormal(UnitNormal);
 
@@ -70,28 +82,38 @@ FGenerateVertexDataResult UPlanetTerrainFace::GenerateVertexData()
 
 	FGenerateVertexDataResult Result;
 	Result.m_MinElevation = MinElevation;
-	Result.m_MaxElevation = MaxElevation;	
+	Result.m_MaxElevation = MaxElevation;
 	return Result;
 }
 
 void UPlanetTerrainFace::GenerateVertexColor()
 {
+	if(!IsValid(m_pGenSettings))
+	{
+		return;
+	}
+	
 	int32 VertexNum = m_Resolution * m_Resolution;
+	// Colorは内部で変換されるのでMaterial側で使用する値にはUVを使用する。
 	m_Colors.SetNum(VertexNum);
+	m_UV1s.SetNum(VertexNum);
 
 	float ElevationRange = m_MaxElevation - m_MinElevation;
-	
+
 	ParallelFor(
 		VertexNum,
 		[&](int32 InIdx)
 		{
-			float Elevation = m_Elevations[InIdx].m_Elevation;
 			// 0.5を海面として、1が最も高いところになる。
+			float Elevation = m_Elevations[InIdx].m_Elevation;
 			float ElevationRatio = ((Elevation - m_MinElevation) / ElevationRange) + 0.5f;
 			// float OceanDepth = FMath::Abs(FMath::Min(m_Elevations[InIdx].m_NoiseValue, 0.f));
 			// float IsLand = m_Elevations[InIdx].m_NoiseValue >= 0.f ? 1.f : 0.f;
+			float BiomeTextureCoordinate = m_pGenSettings->CalculateBiomeTextureCoordinate(m_UnitNormals[InIdx]);
 
-			m_Colors[InIdx] = FLinearColor(ElevationRatio, 0.f, 0.f, 1.f);
+			FLinearColor BiomeColor = m_pGenSettings->CalculatePlanetColor(m_UnitNormals[InIdx], ElevationRatio);
+			m_Colors[InIdx] = FLinearColor(BiomeColor);
+			m_UV1s[InIdx] = FVector2D(ElevationRatio, BiomeTextureCoordinate);
 		}
 	);
 }
@@ -99,7 +121,7 @@ void UPlanetTerrainFace::GenerateVertexColor()
 FMeshDataProxy UPlanetTerrainFace::ConstructMeshData()
 {
 	FMeshDataProxy MeshData;
-	
+
 	// Quadを構築
 	int32 QuadNum = (m_Resolution - 1) * (m_Resolution - 1);
 	MeshData.m_Triangles.SetNum(QuadNum * 2 * 3);
@@ -129,6 +151,7 @@ FMeshDataProxy UPlanetTerrainFace::ConstructMeshData()
 	MeshData.m_Vertices = m_Vertices;
 	MeshData.m_Normals = m_Normals;
 	MeshData.m_Colors = m_Colors;
+	MeshData.m_UV1s = m_UV1s;
 
 	return MeshData;
 }
@@ -136,7 +159,7 @@ FMeshDataProxy UPlanetTerrainFace::ConstructMeshData()
 void UPlanetTerrainFace::SetMinMaxElevation(float InMinElevation, float InMaxElevation)
 {
 	m_MinElevation = InMinElevation;
-	m_MaxElevation  = InMaxElevation;
+	m_MaxElevation = InMaxElevation;
 }
 
 FPlanetElevationInfo UPlanetTerrainFace::CalculatePlanetElevation(const FVector& InPointOnUnitSphere) const
