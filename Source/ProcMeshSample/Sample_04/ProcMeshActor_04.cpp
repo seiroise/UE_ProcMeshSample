@@ -5,6 +5,7 @@
 #include "PlanetGenerationSettingsDataAsset.h"
 #include "PlanetTerrainFace.h"
 #include "ProceduralMeshComponent.h"
+#include "ProcMeshSample/Common/FaceRenderMask.h"
 #include "ProcMeshSample/Common/ScopedTimer.h"
 
 AProcMeshActor_04::AProcMeshActor_04()

@@ -4,24 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ProcMeshSample/Common/FaceRenderMask.h"
 #include "ProcMeshActor_04.generated.h"
 
 class UProceduralMeshComponent;
 class UPlanetGenerationSettingsDataAsset;
-
-UENUM()
-enum class EFaceRenderMask
-{
-	/** 全ての面を更新 */
-	All,
-	/** 上方向の一面だけを更新　*/
-	Forward,
-	Backward,
-	Left,
-	Right,
-	Top,
-	Bottom,
-};
 
 /**
  * サンプル04。地形の生成

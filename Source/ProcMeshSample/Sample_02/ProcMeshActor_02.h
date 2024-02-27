@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "ProcMeshActor_02.generated.h"
 
+enum class EFaceRenderMask : uint8;
 class UProceduralMeshComponent;
 
 /**
@@ -25,11 +26,18 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
+	
 private:
 
 	void GenerateCube();
 	
 private:
+
+	UPROPERTY(EditAnywhere)
+	EFaceRenderMask m_RenderMask;
 
 	UPROPERTY()
 	TObjectPtr<UProceduralMeshComponent> m_pProcMeshComponent;
