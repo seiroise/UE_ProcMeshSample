@@ -29,6 +29,7 @@ void AProcMeshActor_03::BeginPlay()
 	// 各種入力受け取りのセットアップ
 	if(UEnhancedInputComponent* InputComp = Cast<UEnhancedInputComponent>(InputComponent))
 	{
+		InputComp->BindAction(m_pMouseLeftButton, ETriggerEvent::Started, this, &AProcMeshActor_03::OnMouseLeftButton);
 		InputComp->BindAction(m_pMouseLeftButton, ETriggerEvent::Triggered, this, &AProcMeshActor_03::OnMouseLeftButton);
 		InputComp->BindAction(m_pMouseLeftButton, ETriggerEvent::Completed, this, &AProcMeshActor_03::OnMouseLeftButton);
 		InputComp->BindAction(m_pMouseMovement, ETriggerEvent::Triggered, this, &AProcMeshActor_03::OnMouseMovement);
@@ -51,6 +52,8 @@ void AProcMeshActor_03::OnMouseLeftButton(const FInputActionInstance& InInstance
 			if(IsCursorOverlapping(Hit))
 			{
 				m_bIsDrawing = true;
+				m_MeshSectionIndex++;
+				m_LinePosArray.Reset();
 			}	
 		}
 	}
@@ -162,7 +165,7 @@ void AProcMeshActor_03::GenerateLine()
 	}
 
 	// メッシュを生成
-	MeshData.CreateMeshSection(m_pProcMeshComponent);	
+	MeshData.CreateMeshSection(m_pProcMeshComponent, m_MeshSectionIndex);	
 }
 
 void AProcMeshActor_03::AddLineSegmentPlaneVertices(FMeshDataProxy& InMeshData, const FVector& InCenter,

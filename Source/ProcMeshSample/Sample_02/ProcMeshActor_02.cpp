@@ -63,7 +63,7 @@ void AProcMeshActor_02::GenerateCube()
 	// +X
 	if((static_cast<uint8>(m_RenderMask) & static_cast<uint8>(EFaceRenderMask::Forward)) > 0)
 	{
-		MeshData.AddQuad(1, 5, 7, 3);	
+		MeshData.AddQuad(1, 5, 7, 3);
 	}
 	// -X
 	if((static_cast<uint8>(m_RenderMask) & static_cast<uint8>(EFaceRenderMask::Backward)) > 0)

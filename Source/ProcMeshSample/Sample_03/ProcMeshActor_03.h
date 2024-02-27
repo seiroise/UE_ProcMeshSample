@@ -110,4 +110,9 @@ private:
 	 * 線を構成する頂点座標
 	 */
 	TArray<FVector> m_LinePosArray;
+
+	/**
+	 * 描画中の線に対応するMeshSection番号
+	 */
+	int32 m_MeshSectionIndex = -1;
 };

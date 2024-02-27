@@ -17,8 +17,7 @@ void FMeshDataProxy::AddQuad(int32 InV1, int32 InV2, int32 InV3, int32 InV4)
 	AddTriangle(InV1, InV3, InV4);
 }
 
-void FMeshDataProxy::CreateMeshSection(UProceduralMeshComponent* InMeshComponent, int32 InMeshSection,
-									   bool InCreateCollision)
+void FMeshDataProxy::CreateMeshSection(UProceduralMeshComponent* InMeshComponent, int32 InMeshSection, bool InCreateCollision)
 {
 	if (!IsValid(InMeshComponent))
 	{
