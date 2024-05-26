@@ -79,14 +79,14 @@ FIntVector FIntRange3D::GetSize() const
 	return m_Max - m_Min;
 }
 
-FVector FIntRange3D::GetSizeFloat() const
+FVector FIntRange3D::GetVolumeFloat() const
 {
-	return FVector(m_Max - m_Min);
+	return FVector((m_Max - FIntVector(1)) - m_Min);
 }
 
 FVector FIntRange3D::GetCenterFloat() const
 {
-	return FVector(m_Min) + GetSizeFloat() * 0.5f;
+	return FVector(m_Min) + GetVolumeFloat() * 0.5f;
 }
 
 int32 FIntRange3D::PosToIndex(const FIntVector& InPos) const

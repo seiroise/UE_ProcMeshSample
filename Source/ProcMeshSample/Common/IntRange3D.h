@@ -7,6 +7,7 @@ struct FIntRange3DIterator;
 
 // =========================================================================================================
 // 3次元空間の特定の範囲を表す構造体
+// Min <= X < Maxの範囲
 // =========================================================================================================
 USTRUCT()
 struct FIntRange3D
@@ -120,13 +121,13 @@ public:
 	FIntVector GetSize() const;
 
 	/**
-	 * MinからMaxの差を取得(FVectorで)
+	 * 範囲内を空間とした場合の大きさを取得((Max - 1) - Min)
 	 * @return 
 	 */
-	FVector GetSizeFloat() const;
+	FVector GetVolumeFloat() const;
 
 	/**
-	 * @brief 中心座標を取得(floatで)
+	 * @brief 範囲内を空間とした場合の中心座標を取得(floatで)
 	 * @return 
 	 */
 	FVector GetCenterFloat() const;

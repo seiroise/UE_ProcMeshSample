@@ -28,11 +28,14 @@ void AMarchingCubesMeshActor::InitializeGrid()
 	m_GridRange = {m_GridCount};
 	m_GridArray.Init(0, m_GridRange.GetPosNum());
 
+	FVector Center = m_GridRange.GetCenterFloat();
+	float Radius = m_GridCount * 0.5f;
+
 	for (const FIntVector& Pos : m_GridRange)
 	{
 		// 範囲の中心の球体として、そこからの距離で初期化
 		int32 Index = m_GridRange.PosToIndex(Pos);
-		float Distance = (FVector(Pos) - m_GridRange.GetCenterFloat() / m_GridRange.GetSizeFloat()).Length();
+		float Distance = (FVector(Pos) - Center).Length() / Radius; 
 		m_GridArray[Index] = Distance;
 	}
 }
@@ -45,6 +48,9 @@ void AMarchingCubesMeshActor::GenerateMarchingCubesMesh()
 	m_MeshData.m_bUseColors = false;
 	m_MeshData.m_bUseNormals = false;
 	m_MeshData.m_bUseUV1 = false;
+
+	// 格子の初期化
+	InitializeGrid();
 	
 	// 1段階縮小した範囲をマーチする
 	FIntRange3D MarchRange = m_GridRange.ExpandMax(-1);
@@ -77,7 +83,8 @@ void AMarchingCubesMeshActor::MarchCube(float InIsoLevel, const FIntVector& InPo
 	}
 	
 	// 辺に対応する座標を求める
-	static TArray<FVector> EdgeVertArray{0, 12};
+	static TArray<FVector> EdgeVertArray;
+	EdgeVertArray.Init(FVector::ZeroVector, 12);
 	// 12個の辺それぞれのマスクを調べる
 	for(int32 I = 0; I < 12; ++I)
 	{
