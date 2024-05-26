@@ -27,6 +27,11 @@ public:
 	{
 	}
 
+	FIntRange3D(FIntVector InMax)
+		:m_Min(0, 0, 0), m_Max(InMax)
+	{		
+	}
+
 	FIntRange3D(FIntVector InMin, FIntVector InMax)
 		: m_Min(InMin), m_Max(InMax)
 	{

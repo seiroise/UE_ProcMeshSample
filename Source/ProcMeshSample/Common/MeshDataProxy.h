@@ -38,6 +38,11 @@ public:
 	 * @param InCreateCollision コリジョンを作成するかどうか
 	 */
 	void CreateMeshSection(UProceduralMeshComponent* InMeshComponent, int32 InMeshSection = 0, bool InCreateCollision = true);
+
+	/**
+	 * 各種情報を破棄
+	 */
+	void Reset();
 	
 public:
 	/**

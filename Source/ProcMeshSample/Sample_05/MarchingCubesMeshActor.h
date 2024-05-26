@@ -8,6 +8,7 @@
 #include "ProcMeshSample/Common/MeshDataProxy.h"
 #include "MarchingCubesMeshActor.generated.h"
 
+class UMarchingCubesPolygonizer;
 struct FMeshDataProxy;
 /**
  * MarchingCubes法によるメッシュの生成
@@ -23,33 +24,18 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-private:
-	/**
-	 * グリッドの初期化
-	 */
-	void InitializeGrid();
-	
+private:	
 	/**
 	 * MarchingCubesでメッシュを生成する
 	 */
 	void GenerateMarchingCubesMesh();
 
 	/**
-	 * 対応する格子の処理
-	 * @param InPos
+	 * 球体状のボリュームデータを生成する
+	 * @param InSize 
+	 * @param OutVolumeData 
 	 */
-	void MarchCube(float InIsoLevel, const FIntVector& InPos);
-
-	/**
-	 * 頂点の補間
-	 * @param InIsoLevel 
-	 * @param InP1 
-	 * @param InP2 
-	 * @param InV1 
-	 * @param InV2 
-	 * @return 
-	 */
-	FVector InterpVertex(float InIsoLevel, const FVector& InP1, const FVector& InP2, float InV1, float InV2);
+	void GenerateSphereVolumeData(int32 InSize, TArray<float>& OutVolumeData);
 	
 private:
 	/**
@@ -83,19 +69,10 @@ private:
 	TObjectPtr<UDataTable> m_pDensityInput;
 
 	/**
-	 * グリッド範囲
+	 * ポリゴン化処理オブジェクト
 	 */
-	FIntRange3D m_GridRange;
-	
-	/**
-	 * グリッドを構成する頂点情報
-	 */
-	TArray<float> m_GridArray;
-
-	/**
-	 * メッシュデータ
-	 */
-	FMeshDataProxy m_MeshData;
+	UPROPERTY()
+	TObjectPtr<UMarchingCubesPolygonizer> m_pPolygonizer;
 
 #if WITH_EDITOR
 

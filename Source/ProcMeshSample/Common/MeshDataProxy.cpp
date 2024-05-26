@@ -34,3 +34,15 @@ void FMeshDataProxy::CreateMeshSection(UProceduralMeshComponent* InMeshComponent
 		InCreateCollision
 	);
 }
+
+void FMeshDataProxy::Reset()
+{
+	m_Vertices.Reset();
+	m_Triangles.Reset();
+	m_bUseNormals = false;
+	m_Normals.Reset();
+	m_bUseColors = false;
+	m_Colors.Reset();
+	m_bUseUV1 = false;
+	m_UV1s.Reset();
+}
