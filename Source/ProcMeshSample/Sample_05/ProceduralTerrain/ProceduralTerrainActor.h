@@ -44,9 +44,9 @@ public:
 	
 	/**
 	 * 指定のチャンクIDに対応するチャンクを生成する
-	 * @param InChunkHash 
+	 * @param InChunkAddress 
 	 */
-	void GenerateTerrainChunkAt(const FIntVector& InChunkHash);
+	void GenerateTerrainChunkAt(const FIntVector& InChunkAddress);
 
 	/**
 	 * 指定のアクターの存在するチャンクを生成する
@@ -70,7 +70,7 @@ public:
 	 * エフェクターの処理
 	 * @param InEffector 
 	 */
-	void ApplyEffector(UProceduralTerrainEffectorBase* InEffector);
+	void ApplyEffector(UProceduralTerrainEffectorBase* InEffector, float InDeltaTime);
 
 private:
 	/**
@@ -91,42 +91,6 @@ private:
 	 */
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UProceduralTerrainProfileDataAsset> m_pProfile;
-	
-	/**
-	 * 生成シード値
-	 */
-	UPROPERTY(EditAnywhere)
-	int32 m_Seed = 0;
-	
-	/**
-	 * チャンクの大きさ
-	 */
-	UPROPERTY(EditAnywhere)
-	int32 m_ChunkSize = 16;
-	
-	/**
-	 * 表面しきい値
-	 */
-	UPROPERTY(EditAnywhere)
-	float m_IsoLevel = 0.5f;
-	
-	/**
-	 * １つのセルの大きさ
-	 */
-	UPROPERTY(EditAnywhere)
-	float m_CellSize = 100.f;
-	
-	/**
-	 * ノイズサンプリング用の座標のスケール
-	 */
-	UPROPERTY(EditAnywhere)
-	float m_NoiseSamplingScale = 1.f;
-	
-	/**
-	 * ノイズフィルター
-	 */
-	UPROPERTY(EditAnywhere, Instanced)
-	TObjectPtr<UNoiseFilterBase> m_pNoiseFilter;
 	
 	/**
 	 * ポリゴン化用オブジェクト
@@ -160,10 +124,10 @@ private:
 #if WITH_EDITORONLY_DATA
 
 	UPROPERTY(EditAnywhere, Category="AAA")
-	FIntVector m_ChunkHashEditorStart;
+	FIntVector m_ChunkAddressEditorStart;
 
 	UPROPERTY(EditAnywhere, Category="AAA")
-	FIntVector m_ChunkHashEditorEnd;
+	FIntVector m_ChunkAddressEditorEnd;
 	
 #endif
 	

@@ -26,5 +26,5 @@ public:
 	 * 影響を適用
 	 * @param InChunk 
 	 */
-	virtual void Apply(URuntimeTerrainChunkObject* InChunk);
+	virtual void Apply(URuntimeTerrainChunkObject* InChunk ,float InDeltaTime);
 };

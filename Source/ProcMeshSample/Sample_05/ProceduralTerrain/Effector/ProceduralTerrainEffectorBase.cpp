@@ -8,6 +8,6 @@ FBox UProceduralTerrainEffectorBase::GetEffectRange() const
 	return FBox{};
 }
 
-void UProceduralTerrainEffectorBase::Apply(URuntimeTerrainChunkObject* InChunk)
+void UProceduralTerrainEffectorBase::Apply(URuntimeTerrainChunkObject* InChunk, float InDeltaTime)
 {
 }

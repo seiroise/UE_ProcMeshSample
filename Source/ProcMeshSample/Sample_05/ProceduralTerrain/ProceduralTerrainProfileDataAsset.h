@@ -18,14 +18,20 @@ class PROCMESHSAMPLE_API UProceduralTerrainProfileDataAsset : public UDataAsset
 
 public:
 	/**
-	 * 座標に対応するチャンクハッシュを取得
+	 * 座標に対応するチャンクアドレスを取得(座標はFloorされた値を使用)
 	 * @param InLocation 
 	 * @return 
 	 */
-	FIntVector GetChunkHashFromLocation(const FVector& InLocation) const;
-	
-public:
+	FIntVector GetChunkAddressFromLocationFloor(const FVector& InLocation) const;
 
+	/**
+	 * 座標に対するチャンクアドレスを取得(座標はRoundされた値を使用)
+	 * @param InLocation 
+	 * @return 
+	 */
+	FIntVector GetChunkAddressFromLocationRound(const FVector& InLocation) const;
+
+public:
 	/**
 	 * 生成シード値
 	 */
@@ -55,7 +61,7 @@ public:
 	 */
 	UPROPERTY(EditAnywhere)
 	float m_NoiseSamplingScale = 1.f;
-	
+
 	/**
 	 * ノイズフィルター
 	 */

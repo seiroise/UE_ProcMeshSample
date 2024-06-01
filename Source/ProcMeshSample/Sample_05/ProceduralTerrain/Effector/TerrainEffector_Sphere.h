@@ -16,7 +16,7 @@ class PROCMESHSAMPLE_API UTerrainEffector_Sphere : public UProceduralTerrainEffe
 
 public:
 	virtual FBox GetEffectRange() const override;
-	virtual void Apply(URuntimeTerrainChunkObject* InChunk) override;
+	virtual void Apply(URuntimeTerrainChunkObject* InChunk, float InDeltaTime) override;
 
 public:
 	/**

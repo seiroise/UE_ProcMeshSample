@@ -7,6 +7,7 @@
 #include "ProceduralTerrainProfileDataAsset.h"
 #include "RuntimeProceduralTerrainChunkObject.h"
 #include "Effector/ProceduralTerrainEffectorBase.h"
+#include "Kismet/KismetMathLibrary.h"
 
 #include "ProcMeshSample/Common/IntRange3D.h"
 #include "ProcMeshSample/Sample_04/Noise/SimpleNoiseFilter.h"
@@ -38,14 +39,14 @@ void AProceduralTerrainActor::Tick(float DeltaTime)
 	UpdateDirtyChunks(DeltaTime);
 }
 
-void AProceduralTerrainActor::GenerateTerrainChunkAt(const FIntVector& InChunkHash)
+void AProceduralTerrainActor::GenerateTerrainChunkAt(const FIntVector& InChunkAddress)
 {
 	if(!IsValid(m_pProfile))
 	{
 		return;
 	}
 	
-	if (m_TerrainChunkMap.Contains(InChunkHash))
+	if (m_TerrainChunkMap.Contains(InChunkAddress))
 	{
 		// すでにチャンクIDが登録済み
 		return;
@@ -57,14 +58,17 @@ void AProceduralTerrainActor::GenerateTerrainChunkAt(const FIntVector& InChunkHa
 	VolumeData.Init(0.f, Range.GetPosNum());
 
 	// チャンク開始座標
-	FVector ChunkOrigin = FVector{InChunkHash} * ((m_pProfile->m_ChunkSize - 1) * m_pProfile->m_CellSize);
+	FVector ChunkOrigin = FVector{InChunkAddress} * ((m_pProfile->m_ChunkSize - 1) * m_pProfile->m_CellSize);
 
 	// ノイズの値をボリュームデータとして生成
 	for (const FIntVector& PosIdx : Range)
 	{
 		int32 Index = Range.PosToIndex(PosIdx);
 		FVector NoiseSamplingPos = (ChunkOrigin + FVector(PosIdx) * m_pProfile->m_CellSize) * m_pProfile->m_NoiseSamplingScale;
+		// ノイズ生成
 		float V = m_pProfile->m_pNoiseFilter->Evaluate(NoiseSamplingPos);
+		// ノイズに生成する座標の情報を追加する
+		// V = -NoiseSamplingPos.Z + V + FMath::Frac(NoiseSamplingPos.Z / 1600);
 		// UE_LOG(LogTemp, Log, TEXT("%s = %f"), *NoiseSamplingPos.ToString(), V);
 		VolumeData[Index] = V;
 	}
@@ -102,7 +106,7 @@ void AProceduralTerrainActor::GenerateTerrainChunkAt(const FIntVector& InChunkHa
 	pTerrainChunk->m_Origin = ChunkOrigin;
 	pTerrainChunk->m_VolumeData = VolumeData;
 	pTerrainChunk->m_pActor = pActor;
-	m_TerrainChunkMap.Emplace(InChunkHash, pTerrainChunk);
+	m_TerrainChunkMap.Emplace(InChunkAddress, pTerrainChunk);
 }
 
 void AProceduralTerrainActor::GenerateTerrainChunkActorLocation(AActor* InActor, int32 InExtent)
@@ -115,16 +119,16 @@ void AProceduralTerrainActor::GenerateTerrainChunkActorLocation(AActor* InActor,
 	int32 Extent = FMath::Max(0, InExtent);
 
 	FVector Location = InActor->GetActorLocation();
-	FIntVector BaseChunkHash = m_pProfile->GetChunkHashFromLocation(Location);
+	FIntVector BaseChunkAddress = m_pProfile->GetChunkAddressFromLocationRound(Location);
 
 	// 範囲指定
-	FIntVector RangeMin = BaseChunkHash - FIntVector{Extent};
-	FIntVector RangeMax = BaseChunkHash + FIntVector{Extent};
+	FIntVector RangeMin = BaseChunkAddress - FIntVector{Extent};
+	FIntVector RangeMax = BaseChunkAddress + FIntVector{Extent};
 
 	FIntRange3D Range{RangeMin, RangeMax};
-	for(const auto& ChunkHash : Range)
+	for(const auto& ChunkAddress : Range)
 	{
-		GenerateTerrainChunkAt(ChunkHash);
+		GenerateTerrainChunkAt(ChunkAddress);
 	}
 }
 
@@ -154,7 +158,7 @@ void AProceduralTerrainActor::UnregisterEffector(UProceduralTerrainEffectorBase*
 	m_EffectorArray.Remove(InEffector);
 }
 
-void AProceduralTerrainActor::ApplyEffector(UProceduralTerrainEffectorBase* InEffector)
+void AProceduralTerrainActor::ApplyEffector(UProceduralTerrainEffectorBase* InEffector, float InDeltaTime)
 {
 	if(!IsValid(m_pProfile) || !IsValid(InEffector))
 	{
@@ -164,21 +168,21 @@ void AProceduralTerrainActor::ApplyEffector(UProceduralTerrainEffectorBase* InEf
 	// 効果範囲から対応するチャンクの範囲を求める
 	FBox EffectRange = InEffector->GetEffectRange();
 
-	FIntVector ChunkHashMin = m_pProfile->GetChunkHashFromLocation(EffectRange.Min);
-	FIntVector ChunkHashMax = m_pProfile->GetChunkHashFromLocation(EffectRange.Max);
+	FIntVector ChunkAddressMin = m_pProfile->GetChunkAddressFromLocationFloor(EffectRange.Min);
+	FIntVector ChunkAddressMax = m_pProfile->GetChunkAddressFromLocationFloor(EffectRange.Max);
 
-	FIntRange3D Range{ChunkHashMin, ChunkHashMax};
+	FIntRange3D Range{ChunkAddressMin, ChunkAddressMax};
 	// 反復用に範囲を１つ広げる
 	Range = Range.ExpandMax(1);
 	
-	for(const FIntVector& ChunkHash : Range)
+	for(const FIntVector& ChunkAddress : Range)
 	{
-		URuntimeTerrainChunkObject** ppChunk = m_TerrainChunkMap.Find(ChunkHash);
+		URuntimeTerrainChunkObject** ppChunk = m_TerrainChunkMap.Find(ChunkAddress);
 		if(ppChunk != nullptr && IsValid(*ppChunk))
 		{
 			URuntimeTerrainChunkObject* pChunk = *ppChunk;
 			// 効果を適用
-			InEffector->Apply(pChunk);
+			InEffector->Apply(pChunk, InDeltaTime);
 			// チャンクの更新フラグを確認
 			if(pChunk->m_bIsDirty)
 			{
@@ -194,7 +198,7 @@ void AProceduralTerrainActor::ApplyEffectors(float InDeltaTime)
 	// 登録されているエフェクターを順次適用
 	for(UProceduralTerrainEffectorBase* pEffector : m_EffectorArray)
 	{
-		ApplyEffector(pEffector);
+		ApplyEffector(pEffector, InDeltaTime);
 	}
 }
 
@@ -222,7 +226,7 @@ void AProceduralTerrainActor::UpdateDirtyChunks(float InDeltaTime)
 
 void AProceduralTerrainActor::GenerateTerrainChunkEditor()
 {
-	FIntRange3D Range{m_ChunkHashEditorStart, m_ChunkHashEditorEnd};
+	FIntRange3D Range{m_ChunkAddressEditorStart, m_ChunkAddressEditorEnd};
 	for (const auto& PosIdx : Range)
 	{
 		GenerateTerrainChunkAt(PosIdx);

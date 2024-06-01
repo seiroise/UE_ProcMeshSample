@@ -14,7 +14,7 @@ FBox UTerrainEffector_Sphere::GetEffectRange() const
 	return FBox{Min, Max};
 }
 
-void UTerrainEffector_Sphere::Apply(URuntimeTerrainChunkObject* InChunk)
+void UTerrainEffector_Sphere::Apply(URuntimeTerrainChunkObject* InChunk, float InDeltaTime)
 {
 	if(!IsValid(InChunk))
 	{
@@ -35,7 +35,7 @@ void UTerrainEffector_Sphere::Apply(URuntimeTerrainChunkObject* InChunk)
 			// 距離が遠くなるにつれて効果を弱める
 			float Effect = 1.f - (Dist / m_Radius);
 			float GridValue = InChunk->GetGridValueAt(Index);
-			InChunk->SetGridValueAt(Index, GridValue + Effect * m_EffectStrength);
+			InChunk->SetGridValueAt(Index, GridValue + Effect * m_EffectStrength * InDeltaTime);
 
 			// 編集済みフラグ
 			bIsModified |= true;
